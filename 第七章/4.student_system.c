@@ -48,8 +48,8 @@ void output_to_file(Student *arr, int n) {
             arr[i].name, arr[i].age,
             arr[i].class, arr[i].height
             );
-        fclose(fp);
     }
+    fclose(fp);
     return ;
 }
 
@@ -110,6 +110,7 @@ void list_students(Student *arr) {
 
 //定义增加数据函数；
 void add_a_student(Student *arr) {
+    list_students(arr);
     printf("add new item : (name, age, class, height)\n");
     printf("mysql > ");
     scanf("%s%d%d%lf", 
@@ -126,6 +127,7 @@ void add_a_student(Student *arr) {
 
 //定义修改数据函数；
 void modify_a_student(Student *arr) {
+    list_students(arr);
     int id;
     do {
         printf("modify id : ");
@@ -150,14 +152,15 @@ void delete_a_student(Student *arr) {
         return ;
     }
     list_students(arr);
-    int id;
+    int id, ch;
     do {
         printf("delete id : ");
         scanf("%d", &id);
     } while (id < 0 || id > stu_cut);
     char s[100];
     printf("confim (y / n) : ");
-    scanf("%s", s);
+    while ((ch = getchar()) != '\n' && ch != EOF) {};
+    scanf("%[^\n]", s);
     if (s[0] != 'y') return;
     for (int i = id + 1; i < stu_cut; i++) {
         arr[i - 1] = arr[i];
