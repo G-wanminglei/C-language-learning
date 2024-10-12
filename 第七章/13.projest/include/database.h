@@ -19,5 +19,6 @@ enum OP_TYPE {
 };
 
 void run_database();
+void register_table(const char *);
 
 #endif

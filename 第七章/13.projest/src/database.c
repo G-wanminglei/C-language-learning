@@ -8,15 +8,25 @@
 #include<stdio.h>
 #include<database.h>
 
+const char *tables[100];
+int table_cnt = 0;
+
+void register_table(const char *table_name) {
+    tables[table_cnt] = table_name;
+    table_cnt += 1;
+    return ;
+}
+
 static enum OP_TYPE choose_table() {
-    printf("choose table\n");
-    printf("1 : table usage\n");
-    printf("2 : quit\n");
+    for (int i = 0; i < table_cnt; i++) {
+        printf("%d : %s\n", i, tables[i]);
+    }
+    printf("%d : quit\n", table_cnt);
     int x;
     do {
         printf("input : ");
         scanf("%d", &x);
-    } while (x < 1 || x > 2);
+    } while (x < 0 || x > table_cnt);
     if (x == 1) return TABLE_USAGE;
     else return OP_END;
 }
