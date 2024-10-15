@@ -6,6 +6,8 @@
  ************************************************************************/
 
 #include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 #include<database.h>
 
 //定义表库及表数量变量；
@@ -23,6 +25,43 @@ void register_table(const char *table_name, InitTable_T init_table) {
     return ;
 }
 
+//封装数据链表至db.table_data;
+static struct table_data *getNewTableDasa(void *data, long offset) {
+    struct table_data *p = (struct table_data *)malloc(sizeof(struct table_data));
+    p->data = malloc(db.getDataSize());
+    memcpy(p->data, data, db.getDataSize());
+    p->offset = offset;
+    p->next = NULL;
+    return p;
+}
+
+//加载二进制数据至db变量；
+static void load_table_data() {
+    char buff[db.getDataSize()];
+    struct table_data *p = &(db.head);
+    int data_cnt = 0;
+    while (1) {
+        long offset = ftell(db.table);
+        if (fread(buff, db.getDataSize(), 1, db.table) == 0) break;
+        p->next = getNewTableDasa(buff, offset);
+        p = p->next;
+        data_cnt += 1;
+    }
+    printf("load data success : %d itemm\n", data_cnt);
+    return ;
+}
+
+//加载相关表的数据函数；
+static void open_table() {
+    db.table = fopen(db.table_file, "rb+");
+    if (db.table == NULL) {
+        printf("can't open file : %s\n", db.table_file);
+        exit(1);
+    }
+    load_table_data();
+    return ;
+}
+
 //选择表函数；
 static enum OP_TYPE choose_table() {
     for (int i = 0; i < table_cnt; i++) {
@@ -36,6 +75,7 @@ static enum OP_TYPE choose_table() {
     } while (x < 0 || x > table_cnt);
     if (x < table_cnt) {
         tables[x].init_table(&db);
+        open_table();
         return TABLE_USAGE;
     }
     else return OP_END;

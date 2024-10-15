@@ -23,9 +23,20 @@ enum OP_TYPE {
 
 //2.表信息；
 
+//db变量中存储数据的结构体；
+struct table_data {
+    void *data;
+    long offset;
+    struct table_data *next;
+};
+
 //定义结构体类型表示相关表信息；
 struct Database {
+    FILE *table;
     const char *table_name;
+    const char *table_file;
+    struct table_data head;
+    size_t (*getDataSize)();
 };
 
 //声明结构体类型变量db存储相关信息；
