@@ -22,6 +22,7 @@ typedef struct Student {
 //声明相关表信息初始化函数；（表的初始化）
 static void init_table(struct Database *);
 static size_t getDataSize();
+static void printData(void *);
 
 //先于程序运行调用注册函数将表信息写入表库；（表库的初始化）
 __attribute__((constructor))
@@ -32,12 +33,18 @@ static void __register_table() {
 
 //定义相关表信息初始化函数； （表的初始化）
 void init_table(struct Database *db) {
-    db->table_name = table_name;
-    db->table_file = table_file;
+    db->table_name  = table_name;
+    db->table_file  = table_file;
     db->getDataSize = getDataSize;
+    db->printData   = printData;
     return ;
 }
 
 size_t getDataSize() {
     return sizeof(table_data);
+}
+
+void printData(void *__data) {
+    table_data *data = (table_data *)(__data);
+    printf ("%15s%3d%3d%5.2lf\n", data->name, data->age, data->class, data->height);
 }

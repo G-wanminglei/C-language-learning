@@ -35,6 +35,26 @@ static struct table_data *getNewTableDasa(void *data, long offset) {
     return p;
 }
 
+//清空数据函数；
+static void clear_table() {
+    struct table_data *p = db.head.next, *q;
+    while (p) {
+        q = p->next;
+        free(p->data);
+        free(p);
+        p = q;
+    }
+    return ;
+}
+
+//关闭数据文件函数；
+static void close_table() {
+    clear_table();
+    if (db.table == NULL) return;
+    fclose(db.table);
+    return ;
+}
+
 //加载二进制数据至db变量；
 static void load_table_data() {
     char buff[db.getDataSize()];
@@ -74,6 +94,7 @@ static enum OP_TYPE choose_table() {
         scanf("%d", &x);
     } while (x < 0 || x > table_cnt);
     if (x < table_cnt) {
+        close_table();
         tables[x].init_table(&db);
         open_table();
         return TABLE_USAGE;
@@ -102,7 +123,11 @@ static enum OP_TYPE table_usage() {
 
 //查询表信息函数；
 static enum OP_TYPE list_table() {
-    printf("list table\n");
+    struct table_data *p = db.head.next;
+    while (p) {
+        db.printData(p->data);
+        p = p->next;
+    }
     return TABLE_USAGE;
 };
 

@@ -37,6 +37,7 @@ struct Database {
     const char *table_file;
     struct table_data head;
     size_t (*getDataSize)();
+    void (*printData)(void *);
 };
 
 //声明结构体类型变量db存储相关信息；
