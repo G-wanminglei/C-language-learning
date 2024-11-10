@@ -25,6 +25,8 @@ void register_table(const char *table_name, InitTable_T init_table) {
     return ;
 }
 
+//CHOOSE_TABLE
+
 //封装数据链表至db.table_data;
 static struct table_data *getNewTableDasa(void *data, long offset) {
     struct table_data *p = (struct table_data *)malloc(sizeof(struct table_data));
@@ -82,6 +84,37 @@ static void open_table() {
     return ;
 }
 
+//LIST_TABLE
+
+//打印表头函数；
+void printTableHeader() {
+    int len = 0;
+    len += printf("%5s|", "id");
+    char frm[100];
+    for (int i = 0; i < db.header_cut; i++) {
+        sprintf(frm, "%%%ds|", db.header_len[i]);
+        len += printf(frm, db.header_name[i]);
+    }
+    printf("\n");
+    for (int i = 0; i < len; i++) printf("-");
+    printf("\n");
+    return ;
+}
+
+//ADD_TABLE
+
+//添加数据至文件末尾函数；
+void add_one_table_data(void *buff) {
+    fseek(db.table, 0, SEEK_END);
+    long offset = ftell(db.table);
+    struct table_data *p = &(db.head);
+    while (p->next) p = p->next;
+    p->next = getNewTableDasa(buff, offset);
+    fwrite(buff, db.getDataSize(), 1, db.table);
+    fflush(db.table);
+    return ;
+}
+
 //选择表函数；
 static enum OP_TYPE choose_table() {
     for (int i = 0; i < table_cnt; i++) {
@@ -124,16 +157,30 @@ static enum OP_TYPE table_usage() {
 //查询表信息函数；
 static enum OP_TYPE list_table() {
     struct table_data *p = db.head.next;
+    int id = 0;
+    printTableHeader();
     while (p) {
+        printf("%5d|", id);
         db.printData(p->data);
         p = p->next;
+        id += 1;
     }
     return TABLE_USAGE;
 };
 
 //增加表信息函数；
 static enum OP_TYPE add_table() {
-    printf("add table\n");
+    printf("add new item : (");
+    for (int i = 0; i < db.header_cut; i++) {
+        if (i) printf(",");
+        printf("%s", db.header_name[i]);
+    }
+    printf(")\n");
+    printf("input : ");
+    char buff[db.getDataSize()];
+    db.scanData(buff);
+    add_one_table_data(buff);
+    printf("add one item to %s : succress\n\n", db.table_name);
     return TABLE_USAGE;
 };
 

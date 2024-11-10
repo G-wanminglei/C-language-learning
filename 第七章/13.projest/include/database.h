@@ -35,9 +35,13 @@ struct Database {
     FILE *table;
     const char *table_name;
     const char *table_file;
+    const char **header_name;
+    int header_cut;
+    int *header_len;
     struct table_data head;
     size_t (*getDataSize)();
     void (*printData)(void *);
+    void (*scanData)(void *);
 };
 
 //声明结构体类型变量db存储相关信息；
