@@ -25,6 +25,13 @@ void register_table(const char *table_name, InitTable_T init_table) {
     return ;
 }
 
+//删除链表节点函数；
+static void destroyTableData(struct table_data *p) {
+    free(p->data);
+    free(p);
+    return ;
+}
+
 //CHOOSE_TABLE
 
 //封装数据链表至db.table_data;
@@ -42,8 +49,7 @@ static void clear_table() {
     struct table_data *p = db.head.next, *q;
     while (p) {
         q = p->next;
-        free(p->data);
-        free(p);
+        destroyTableData(p);
         p = q;
     }
     return ;
@@ -104,7 +110,7 @@ void printTableHeader() {
 //ADD_TABLE
 
 //添加数据至文件末尾函数；
-void add_one_table_data(void *buff) {
+static long add_one_table_data(void *buff) {
     fseek(db.table, 0, SEEK_END);
     long offset = ftell(db.table);
     struct table_data *p = &(db.head);
@@ -112,6 +118,65 @@ void add_one_table_data(void *buff) {
     p->next = getNewTableDasa(buff, offset);
     fwrite(buff, db.getDataSize(), 1, db.table);
     fflush(db.table);
+    return offset;
+}
+
+//MODIFY_TABLE
+
+//列出数据返回数据数量
+static int __list_table() {
+    struct table_data *p = db.head.next;
+    int id = 0;
+    printTableHeader();
+    while (p) {
+        printf("%5d|", id);
+        db.printData(p->data);
+        p = p->next;
+        id += 1;
+    }
+    return id;
+};
+
+//覆盖数据函数；
+static void modify_one_table_data(void *buff, int id) {
+    struct table_data *p = db.head.next;
+    for (int i = 0; i < id; i++) p = p->next;
+    memcpy(p->data, buff, db.getDataSize());
+    fseek(db.table, p->offset, SEEK_SET);
+    fwrite(buff, db.getDataSize(), 1, db.table);
+    fflush(db.table);
+    return ;
+}
+
+//DELETE_TABLE
+
+//清空文件及链表函数；
+static void clearTableData() {
+    fclose(db.table);
+    db.table = fopen(db.table_file, "w");
+    fclose(db.table);
+    db.table = fopen(db.table_file, "rb+");
+    struct table_data *p = db.head.next, *q;
+    while (p) {
+        q = p->next;
+        destroyTableData(p);
+        p = q;
+    }
+    db.head.next =  NULL;
+    return ;
+}
+
+//重新加载链表数据至文件函数；
+static void restoreTableData() {
+    struct table_data *p = db.head.next, *q;
+    db.head.next = NULL;
+    clearTableData();
+    while (p) {
+        q = p->next;
+        p->offset = add_one_table_data(p->data);
+        destroyTableData(p);
+        p = q;
+    }
     return ;
 }
 
@@ -186,13 +251,42 @@ static enum OP_TYPE add_table() {
 
 //修改表信息函数；
 static enum OP_TYPE modify_table() {
-    printf("modify table\n");
+    int n = __list_table();
+    int id;
+    do {
+        printf("modify id (%d back): ", n);
+        scanf("%d", &id);
+    } while (id < 0 || id > n);
+    if (id == n) return TABLE_USAGE;
+    printf("modify item(id = %d) : (", id);
+    for (int i = 0; i < db.header_cut; i++) {
+        if (i) printf(",");
+        printf("%s", db.header_name[i]);
+    }
+    printf(")\n");
+    printf("input : ");
+    char buff[db.getDataSize()];
+    db.scanData(buff);
+    modify_one_table_data(buff, id);
+    printf("modify one item at %s : succress\n\n", db.table_name);
     return TABLE_USAGE;
 };
 
 //删除表信息函数；
 static enum OP_TYPE delete_table() {
-    printf("delete table\n");
+    int n = __list_table();
+    int id;
+    do {
+        printf("delete id (%d back): ", n);
+        scanf("%d", &id);
+    } while (id < 0 || id > n);
+    if (id == n) return TABLE_USAGE;
+    struct table_data *p = &(db.head), *q;
+    for (int i = 0; i < id; i++) p = p->next;
+    q = p->next;
+    p->next = q->next;
+    destroyTableData(q);
+    restoreTableData();
     return TABLE_USAGE;
 };
 
