@@ -237,7 +237,7 @@ static enum OP_TYPE list_table() {
 static enum OP_TYPE add_table() {
     printf("add new item : (");
     for (int i = 0; i < db.header_cut; i++) {
-        if (i) printf(",");
+        if (i) printf(", ");
         printf("%s", db.header_name[i]);
     }
     printf(")\n");
